@@ -1,0 +1,1973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Veronica | AI Tutoring for Kids and Teens in NYC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* HSL-based palette that all shifts together from --hue */
+:root {
+  --hue: 25;
+  --plum: hsl(var(--hue), 75%, 65%);
+  --plum-dark: hsl(var(--hue), 65%, 55%);
+  --plum-light: hsl(var(--hue), 75%, 94%);
+  --plum-hover: hsl(var(--hue), 70%, 87%);
+  --rose: hsl(calc(var(--hue) + 60), 60%, 77%);
+  --rose-light: hsl(calc(var(--hue) + 60), 80%, 97%);
+  --honey: hsl(calc(var(--hue) + 105), 80%, 67%);
+  --honey-light: hsl(calc(var(--hue) + 105), 85%, 96%);
+  --sage: hsl(calc(var(--hue) + 190), 40%, 60%);
+  --sage-light: hsl(calc(var(--hue) + 190), 55%, 95%);
+  --sky: hsl(calc(var(--hue) + 160), 55%, 69%);
+  --coral: hsl(calc(var(--hue) + 120), 65%, 67%);
+
+  /* Section boundary colors.
+     Each section is a vertical gradient between two adjacent boundaries,
+     so boundaries blend seamlessly from section to section.
+     All derived from --hue so the slider shifts everything harmoniously. */
+  --sec0: hsl(var(--hue), 50%, 94%);                    /* warm amber */
+  --sec1: hsl(calc(var(--hue) + 35), 40%, 94%);         /* warm honey */
+  --sec2: hsl(calc(var(--hue) + 80), 30%, 94%);         /* soft sage */
+  --sec3: hsl(calc(var(--hue) + 125), 22%, 95%);        /* soft mint */
+  --sec4: hsl(calc(var(--hue) + 175), 14%, 95%);        /* soft cream/neutral */
+  --sec5: hsl(calc(var(--hue) + 230), 25%, 93%);        /* soft lavender */
+  --sec6: hsl(calc(var(--hue) + 275), 22%, 88%);        /* deeper muted */
+
+  --text: #17202b;
+  --text-soft: #5c5770;
+  --bg: #fefefe;
+  --card-shadow: 0 2px 16px rgba(0,0,0,0.04);
+  --radius: 16px;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+h1, h2, h3 { font-family: 'Nunito', sans-serif; color: var(--text); }
+a { color: var(--plum); }
+
+/* ============ INTRO CHAT OVERLAY ============ */
+.intro-chat {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(180deg, hsl(var(--hue), 70%, 97%) 0%, #ffffff 100%);
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 60px 20px 90px;
+  transition: opacity 0.7s ease-out, visibility 0.7s;
+}
+
+.intro-chat.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.chat-header {
+  position: absolute;
+  top: 24px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-soft);
+  letter-spacing: 0.04em;
+}
+
+.chat-header .dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  background: var(--sage);
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+  animation: chatLive 1.6s ease-in-out infinite;
+}
+
+@keyframes chatLive {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+.chat-feed {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chat-bubble {
+  max-width: 82%;
+  padding: 12px 16px;
+  font-size: 0.98rem;
+  line-height: 1.5;
+  border-radius: 20px;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: bubbleIn 0.4s ease-out forwards;
+  word-wrap: break-word;
+}
+
+@keyframes bubbleIn { to { opacity: 1; transform: translateY(0); } }
+
+.chat-bubble.left {
+  align-self: flex-start;
+  background: #f1f0f5;
+  color: var(--text);
+  border-bottom-left-radius: 6px;
+}
+
+.chat-bubble.right {
+  align-self: flex-end;
+  background: var(--plum);
+  color: #fff;
+  border-bottom-right-radius: 6px;
+}
+
+/* Inline clickable action link inside a bubble */
+.action-link {
+  display: inline-block;
+  color: var(--plum);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  padding: 2px 6px;
+  margin: 2px 0 0 2px;
+  border-radius: 8px;
+  transition: background 0.25s, color 0.25s, transform 0.2s;
+  animation: actionPulse 2.2s ease-in-out 0.5s infinite;
+  white-space: nowrap;
+}
+
+.action-link:hover,
+.action-link:focus {
+  background: var(--plum);
+  color: #fff;
+  transform: translateY(-1px);
+  outline: none;
+}
+
+@keyframes actionPulse {
+  0%, 100% { box-shadow: 0 0 0 0 hsla(var(--hue), 75%, 65%, 0.4); }
+  50% { box-shadow: 0 0 0 7px hsla(var(--hue), 75%, 65%, 0); }
+}
+
+/* Typewriter blinking cursor */
+.type-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: currentColor;
+  margin-left: 2px;
+  vertical-align: middle;
+  animation: cursorBlink 0.9s steps(2) infinite;
+  opacity: 0.85;
+}
+
+@keyframes cursorBlink {
+  0%, 100% { opacity: 0.85; }
+  50% { opacity: 0; }
+}
+
+.typing-bubble {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 14px 16px;
+  border-radius: 20px;
+  width: 60px;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: bubbleIn 0.3s ease-out forwards;
+}
+
+.typing-bubble.left {
+  align-self: flex-start;
+  background: #f1f0f5;
+  border-bottom-left-radius: 6px;
+}
+
+.typing-bubble.right {
+  align-self: flex-end;
+  background: var(--plum-light);
+  border-bottom-right-radius: 6px;
+}
+
+.typing-bubble span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #a8a0c0;
+  animation: typingDot 1.2s infinite ease-in-out;
+}
+
+.typing-bubble.right span { background: var(--plum); }
+.typing-bubble span:nth-child(1) { animation-delay: 0s; }
+.typing-bubble span:nth-child(2) { animation-delay: 0.18s; }
+.typing-bubble span:nth-child(3) { animation-delay: 0.36s; }
+
+@keyframes typingDot {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+  30% { transform: translateY(-5px); opacity: 1; }
+}
+
+.chat-skip {
+  position: fixed;
+  bottom: 22px;
+  right: 22px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-soft);
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  padding: 8px 18px;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  z-index: 10001;
+}
+
+.chat-skip:hover {
+  background: var(--plum);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+body.intro-active { overflow: hidden; height: 100vh; }
+
+/* ============ COLOR SLIDER ============ */
+.color-slider {
+  position: fixed;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  border: 1px solid #eaeaf0;
+  border-radius: 36px;
+  padding: 14px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  z-index: 500;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease-out;
+}
+
+.color-slider.ready {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.color-slider .slider-icon {
+  font-size: 1rem;
+  filter: hue-rotate(calc((var(--hue) - 260) * 1deg)) saturate(0.8);
+}
+
+/* Vertical slider on desktop */
+.color-slider input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 8px;
+  height: 120px;
+  writing-mode: vertical-lr;
+  direction: rtl;
+  background: linear-gradient(
+    to bottom,
+    hsl(260, 75%, 65%),
+    hsl(320, 75%, 65%),
+    hsl(20, 75%, 65%),
+    hsl(80, 75%, 65%),
+    hsl(140, 75%, 65%),
+    hsl(200, 75%, 65%),
+    hsl(260, 75%, 65%)
+  );
+  border-radius: 10px;
+  outline: none;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+}
+
+.color-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  border: 2px solid var(--plum);
+  border-radius: 50%;
+  cursor: grab;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.color-slider input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  border: 2px solid var(--plum);
+  border-radius: 50%;
+  cursor: grab;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* Mobile: compact horizontal slider in top-right */
+@media (max-width: 640px) {
+  .color-slider {
+    top: 12px;
+    right: 12px;
+    transform: none;
+    flex-direction: row;
+    padding: 8px 14px;
+    gap: 10px;
+    border-radius: 50px;
+  }
+  .color-slider input[type="range"] {
+    width: 110px;
+    height: 6px;
+    writing-mode: horizontal-tb;
+    direction: ltr;
+    background: linear-gradient(
+      to right,
+      hsl(260, 75%, 65%),
+      hsl(320, 75%, 65%),
+      hsl(20, 75%, 65%),
+      hsl(80, 75%, 65%),
+      hsl(140, 75%, 65%),
+      hsl(200, 75%, 65%),
+      hsl(260, 75%, 65%)
+    );
+    border-radius: 10px;
+  }
+  .color-slider input[type="range"]::-webkit-slider-thumb {
+    width: 16px;
+    height: 16px;
+  }
+  .color-slider .slider-icon { font-size: 0.9rem; }
+}
+
+/* ============ HERO ============ */
+.hero {
+  padding: 64px 20px 56px;
+  text-align: center;
+  background: linear-gradient(to bottom, var(--sec0) 0%, var(--sec1) 100%);
+}
+
+.hero-name {
+  font-size: 2.6rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  margin-bottom: 6px;
+}
+
+.hero-tagline {
+  font-family: 'Nunito', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--plum);
+  margin-bottom: 16px;
+}
+
+.hero-desc {
+  font-size: 1rem;
+  color: var(--text-soft);
+  max-width: 480px;
+  margin: 0 auto 28px;
+  line-height: 1.75;
+}
+
+.cta-btn {
+  display: inline-block;
+  font-family: 'Nunito', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 800;
+  padding: 14px 36px;
+  border-radius: 50px;
+  background: var(--plum);
+  color: #fff;
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s, background 0.3s;
+  box-shadow: 0 4px 16px hsla(var(--hue), 70%, 60%, 0.25);
+}
+
+.cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px hsla(var(--hue), 70%, 60%, 0.3);
+}
+
+/* ============ SECTIONS ============ */
+.section { padding: 64px 20px; }
+
+/* Section-specific gradient backgrounds (continuous color journey) */
+#learn.section {
+  background: linear-gradient(to bottom, var(--sec1) 0%, var(--sec2) 100%);
+}
+
+.section-header { text-align: center; margin-bottom: 40px; }
+.section-header h2 { font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; }
+.section-header p {
+  color: var(--text-soft);
+  font-size: 0.95rem;
+  max-width: 480px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+/* ============ ABOUT ============ */
+.about-section {
+  background: linear-gradient(to bottom, var(--sec3) 0%, var(--sec4) 100%);
+}
+
+.about-card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 32px 24px;
+  max-width: 560px;
+  margin: 0 auto;
+  box-shadow: var(--card-shadow);
+}
+
+.about-card p {
+  font-size: 1rem;
+  color: var(--text-soft);
+  line-height: 1.8;
+  margin-bottom: 16px;
+}
+
+.about-card p:last-child { margin-bottom: 0; }
+
+.about-link {
+  display: inline-block;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  color: var(--plum);
+  transition: opacity 0.2s;
+}
+
+.about-link:hover { opacity: 0.75; }
+
+.about-links-small {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid hsla(var(--hue), 20%, 70%, 0.18);
+  font-size: 0.85rem !important;
+  color: var(--text-soft) !important;
+  line-height: 1.6 !important;
+}
+
+.about-links-small a {
+  color: var(--plum);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 500;
+}
+
+.about-links-small a:hover { opacity: 0.75; }
+
+/* ============ LEARN ============ */
+.learn-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.learn-card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 22px 20px;
+  box-shadow: var(--card-shadow);
+  border-left: 4px solid;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+
+.learn-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.07);
+}
+
+.learn-card:nth-child(1) { border-color: var(--plum); }
+.learn-card:nth-child(2) { border-color: var(--rose); }
+.learn-card:nth-child(3) { border-color: var(--sky); }
+.learn-card:nth-child(4) { border-color: var(--sage); }
+.learn-card:nth-child(5) { border-color: var(--coral); }
+.learn-card:nth-child(6) { border-color: var(--honey); }
+
+.learn-card .card-icon { font-size: 1.5rem; flex-shrink: 0; margin-top: 2px; }
+.learn-card .card-body { flex: 1; }
+.learn-card .card-body h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 4px; }
+.learn-card .card-body p { color: var(--text-soft); font-size: 0.9rem; line-height: 1.65; }
+
+/* Featured "Learn to Learn" card */
+.learn-card.featured {
+  background: linear-gradient(135deg, var(--plum) 0%, var(--plum-dark) 100%);
+  border-left: none;
+  color: #fff;
+  position: relative;
+  padding-top: 28px;
+  box-shadow: 0 8px 28px hsla(var(--hue), 60%, 50%, 0.2);
+  grid-column: 1 / -1;
+}
+
+.learn-card.featured .card-icon { color: #fff; }
+.learn-card.featured .card-body h3 { color: #fff; font-size: 1.15rem; }
+.learn-card.featured .card-body p { color: rgba(255,255,255,0.9); font-size: 0.95rem; }
+
+.core-badge {
+  position: absolute;
+  top: -10px;
+  left: 20px;
+  background: var(--honey);
+  color: #5c4813;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 50px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* ============ PRICING (kept in case of future use) ============ */
+.pricing-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.price-card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 28px 22px;
+  text-align: center;
+  box-shadow: var(--card-shadow);
+  position: relative;
+}
+
+.price-card.featured { background: var(--plum); color: #fff; }
+.price-card h3 { font-size: 1.15rem; font-weight: 800; margin-bottom: 6px; }
+.price-label { font-size: 0.85rem; color: var(--text-soft); margin-bottom: 12px; }
+.price-card.featured .price-label { color: rgba(255,255,255,0.75); }
+
+.price-amount {
+  font-family: 'Nunito', sans-serif;
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--plum);
+}
+
+.price-card.featured .price-amount { color: #fff; }
+.price-unit { font-size: 0.9rem; font-weight: 500; }
+
+.price-note { margin-top: 10px; font-size: 0.85rem; color: var(--text-soft); line-height: 1.6; }
+.price-card.featured .price-note { color: rgba(255,255,255,0.75); }
+
+.price-badge {
+  position: absolute;
+  top: -10px;
+  right: 16px;
+  background: var(--honey);
+  color: #5c4813;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 3px 12px;
+  border-radius: 50px;
+}
+
+.pricing-footer {
+  text-align: center;
+  margin-top: 20px;
+  color: var(--text-soft);
+  font-size: 0.88rem;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ============ CONTACT ============ */
+.contact-section {
+  background: linear-gradient(to bottom, var(--sec2) 0%, var(--sec3) 100%);
+}
+
+/* Pricing accordion above the form */
+.pricing-accordion {
+  max-width: 520px;
+  margin: 0 auto 20px;
+  border-top: 1px solid hsla(var(--hue), 30%, 70%, 0.25);
+  border-bottom: 1px solid hsla(var(--hue), 30%, 70%, 0.25);
+}
+
+.pricing-toggle {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  text-align: left;
+  transition: color 0.2s;
+}
+
+.pricing-toggle:hover { color: var(--plum); }
+
+.pricing-toggle .chevron {
+  display: inline-block;
+  font-size: 0.85rem;
+  color: var(--text-soft);
+  transition: transform 0.3s ease;
+  line-height: 1;
+}
+
+.pricing-toggle.open .chevron { transform: rotate(90deg); }
+
+.pricing-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease, padding 0.35s ease;
+}
+
+.pricing-content.open { max-height: 240px; }
+
+.pricing-inner {
+  padding: 2px 4px 18px;
+  color: var(--text-soft);
+  font-size: 0.95rem;
+  line-height: 1.9;
+}
+
+.pricing-inner .price-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pricing-inner .price-row .price-label-inline {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.pricing-inner .price-row .price-amount-inline {
+  color: var(--plum);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.contact-card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 32px 22px;
+  max-width: 520px;
+  margin: 0 auto;
+  box-shadow: var(--card-shadow);
+}
+
+.form-group { margin-bottom: 16px; }
+.form-group label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.form-help {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.93rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus { border-color: var(--plum); }
+.form-group textarea { resize: vertical; min-height: 80px; }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.form-divider {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 20px 0 12px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.radio-group {
+  display: flex;
+  gap: 20px;
+  margin-top: 2px;
+}
+
+.radio-group label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  font-size: 0.93rem;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.radio-group input[type="radio"] { width: auto; accent-color: var(--plum); }
+
+.submit-btn {
+  font-family: 'Nunito', sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 50px;
+  background: var(--plum);
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 12px hsla(var(--hue), 70%, 60%, 0.2);
+  margin-top: 8px;
+}
+
+.submit-btn:hover { transform: translateY(-2px); }
+
+.thank-you { display: none; text-align: center; padding: 32px 16px; }
+.thank-you h3 { font-size: 1.5rem; color: var(--plum); margin-bottom: 8px; }
+.thank-you p { color: var(--text-soft); font-size: 0.95rem; }
+
+/* ============ DEMOS ============ */
+.demo-section {
+  background: linear-gradient(to bottom, var(--sec4) 0%, var(--sec5) 100%);
+}
+
+/* -- Scramble -- */
+.scramble-card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 28px 18px;
+  text-align: center;
+  box-shadow: var(--card-shadow);
+  max-width: 560px;
+  margin: 0 auto 28px;
+  position: relative;
+  overflow: visible;
+}
+
+.scramble-card h3 { font-size: 1.1rem; font-weight: 800; color: var(--plum); margin-bottom: 4px; }
+.scramble-hint { color: var(--text-soft); font-size: 0.85rem; margin-bottom: 16px; }
+
+.target-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 8px;
+  background: var(--plum-light);
+  border-radius: 12px;
+  margin-bottom: 14px;
+  min-height: 56px;
+}
+
+.target-row {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  gap: 5px;
+}
+
+.target-slot {
+  width: 36px;
+  height: 42px;
+  border: 2px dashed hsl(var(--hue), 70%, 80%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Nunito', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--plum);
+  transition: background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.target-slot.drag-over {
+  background: var(--plum-hover);
+  border-color: var(--plum);
+  border-style: solid;
+}
+
+.target-slot.filled {
+  background: var(--plum-light);
+  border-style: solid;
+  border-color: var(--plum);
+}
+
+.target-slot.correct {
+  background: var(--sage-light);
+  border-color: var(--sage);
+  color: hsl(calc(var(--hue) + 190), 45%, 30%);
+}
+
+.letter-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 5px;
+  padding: 8px 4px;
+  min-height: 50px;
+}
+
+.letter-tile {
+  width: 36px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Nunito', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #fff;
+  border-radius: 8px;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.letter-tile:active { cursor: grabbing; }
+.letter-tile.dragging { opacity: 0.5; transform: scale(0.9); }
+.letter-tile.placed { display: none; }
+
+.drag-ghost {
+  position: fixed;
+  pointer-events: none;
+  z-index: 10000;
+  width: 42px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Nunito', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  transform: translate(-50%, -50%);
+}
+
+.scramble-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.scramble-btn {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 10px 24px;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.scramble-btn:hover { transform: scale(1.03); }
+.scramble-btn:active { transform: scale(0.97); }
+.btn-scramble { background: var(--plum); color: #fff; }
+.btn-reset {
+  background: var(--honey-light);
+  color: hsl(calc(var(--hue) + 105), 50%, 28%);
+  border: 1px solid hsl(calc(var(--hue) + 105), 60%, 78%);
+}
+
+.scramble-status {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--plum);
+  min-height: 22px;
+  margin-top: 8px;
+}
+
+/* -- Binary -- */
+.binary-card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 28px 18px;
+  text-align: center;
+  box-shadow: var(--card-shadow);
+  max-width: 560px;
+  margin: 0 auto 28px;
+}
+
+.binary-card h3 { font-size: 1.1rem; font-weight: 800; color: var(--plum); margin-bottom: 4px; }
+.binary-desc { color: var(--text-soft); font-size: 0.85rem; margin-bottom: 16px; }
+
+.binary-input {
+  font-family: 'Nunito', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  padding: 11px 20px;
+  border: 2px solid hsl(var(--hue), 75%, 86%);
+  border-radius: 50px;
+  background: var(--plum-light);
+  color: var(--text);
+  text-align: center;
+  width: 100%;
+  max-width: 300px;
+  outline: none;
+  transition: border-color 0.25s;
+}
+
+.binary-input::placeholder { color: #a8a0c0; }
+.binary-input:focus { border-color: var(--plum); }
+
+.binary-output {
+  margin-top: 16px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.95rem;
+  color: var(--plum);
+  word-break: break-all;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+  min-height: 20px;
+  line-height: 1.8;
+  font-weight: 600;
+}
+
+.binary-explainer {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+  font-style: italic;
+}
+
+/* -- Facts -- */
+.facts-heading {
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--plum);
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.facts-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.fact-card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 20px 18px;
+  box-shadow: var(--card-shadow);
+  font-size: 0.9rem;
+  color: var(--text-soft);
+  line-height: 1.6;
+  border-left: 4px solid;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+}
+
+.fact-card.visible { opacity: 1; transform: translateY(0); }
+.fact-emoji { font-size: 1.4rem; flex-shrink: 0; }
+
+.fact-card:nth-child(1) { border-color: var(--plum); }
+.fact-card:nth-child(2) { border-color: var(--rose); }
+.fact-card:nth-child(3) { border-color: var(--sky); }
+.fact-card:nth-child(4) { border-color: var(--honey); }
+.fact-card:nth-child(5) { border-color: var(--sage); }
+.fact-card:nth-child(6) { border-color: var(--coral); }
+
+/* ============ EASTER EGGS ============ */
+.easter-egg {
+  cursor: pointer;
+  opacity: 0.12;
+  transition: opacity 0.3s, transform 0.3s;
+  position: absolute;
+  font-size: 0.8rem;
+  z-index: 10;
+  user-select: none;
+}
+
+.easter-egg:hover { opacity: 0.45; }
+.easter-egg.found { opacity: 1; transform: scale(1.5); }
+
+#egg1 { bottom: 8px; right: 8px; }
+#egg2 { top: 6px; left: 8px; }
+#egg3 { bottom: 4px; left: 10px; }
+
+.easter-msg {
+  display: none;
+  text-align: center;
+  padding: 14px 20px;
+  background: var(--honey-light);
+  border: 1px solid hsl(calc(var(--hue) + 105), 60%, 78%);
+  border-radius: var(--radius);
+  margin: 24px auto 0;
+  max-width: 480px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  color: hsl(calc(var(--hue) + 105), 50%, 28%);
+  font-size: 0.92rem;
+  animation: fadeUp 0.4s ease-out;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============ FOOTER ============ */
+.footer {
+  text-align: center;
+  padding: 28px 20px 32px;
+  background: linear-gradient(to bottom, var(--sec5) 0%, var(--sec6) 100%);
+  color: var(--text-soft);
+  font-size: 0.85rem;
+  position: relative;
+  border-top: none;
+}
+
+.footer a { color: var(--plum); text-decoration: none; font-weight: 600; }
+.footer a:hover { text-decoration: underline; }
+
+/* ============ CONFETTI ============ */
+.confetti-canvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ============ SCROLL REVEAL ============ */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.45s ease-out, transform 0.45s ease-out;
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* ============ DESKTOP ============ */
+@media (min-width: 640px) {
+  .hero { padding: 80px 24px 72px; }
+  .hero-name { font-size: 3.2rem; }
+  .hero-tagline { font-size: 1.35rem; }
+  .hero-desc { font-size: 1.1rem; max-width: 540px; }
+  .section { padding: 80px 24px; }
+  .section-header h2 { font-size: 2rem; }
+  .learn-grid { grid-template-columns: 1fr 1fr; max-width: 760px; }
+  .learn-card.featured { grid-column: 1 / -1; }
+  .pricing-grid { grid-template-columns: repeat(3, 1fr); max-width: 840px; }
+  .facts-grid { grid-template-columns: 1fr 1fr; max-width: 680px; }
+  .letter-tile { width: 40px; height: 46px; font-size: 1.2rem; }
+  .target-slot { width: 40px; height: 46px; font-size: 1.2rem; }
+  .drag-ghost { width: 46px; height: 52px; font-size: 1.3rem; }
+  .scramble-card { max-width: 640px; padding: 36px 28px; }
+}
+
+@media (max-width: 420px) {
+  .letter-tile { width: 32px; height: 38px; font-size: 1rem; }
+  .target-slot { width: 32px; height: 38px; font-size: 1rem; }
+  .drag-ghost { width: 38px; height: 44px; font-size: 1.1rem; }
+  .form-row { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== INTRO CHAT ==================== -->
+<div class="intro-chat" id="introChat" role="dialog" aria-label="Welcome chat">
+  <div class="chat-header"><span class="dot"></span>Live chat</div>
+  <div class="chat-feed" id="chatFeed"></div>
+  <button class="chat-skip" id="chatSkip" type="button">Skip &rarr;</button>
+</div>
+
+<!-- ==================== COLOR SLIDER ==================== -->
+<div class="color-slider" id="colorSlider" title="Shift theme color">
+  <span class="slider-icon">🎨</span>
+  <input type="range" id="hueSlider" min="0" max="360" value="0" aria-label="Shift theme color">
+</div>
+
+<!-- ==================== HERO ==================== -->
+<section class="hero">
+  <h1 class="hero-name">Veronica</h1>
+  <p class="hero-tagline">AI Tutoring for Kids and Teens in NYC</p>
+  <p class="hero-desc">Bespoke one-on-one teaching in how to understand, use, and build with AI.</p>
+  <a href="#contact" class="cta-btn">Get in Touch</a>
+</section>
+
+<!-- ==================== ABOUT ==================== -->
+<section class="section about-section" id="about">
+  <div class="section-header">
+    <h2>About Me</h2>
+  </div>
+  <div class="about-card reveal">
+    <p>Hi, I'm Veronica. I work one on one with kids and teens to help them understand and use AI in a smart, safe, and creative way.</p>
+
+    <p>A lot of kids are already using AI, but most of them are figuring it out on their own. That can lead to confusion, bad habits, or just using it without really learning anything. My goal is to give them guidance so they actually understand what they are doing.</p>
+
+    <p>In my sessions, I focus on three things.</p>
+
+    <p><strong>Safety comes first.</strong> I teach students what to avoid, what not to share, and how to use AI responsibly.</p>
+
+    <p><strong>Then we make it fun.</strong> We explore tools, create images, build small projects, and keep things engaging.</p>
+
+    <p><strong>Most importantly, I help them learn how to think.</strong> Not just get answers, but understand ideas, ask better questions, and use AI as a tool to learn.</p>
+
+    <p>I am based on the Upper West Side in New York City and work with students in personalized sessions depending on their level and interests.</p>
+
+    <p class="about-links-small">More about me on <a href="https://linkedin.com/in/veronicabaker228" target="_blank" rel="noopener">LinkedIn</a>, or read my writing on <a href="https://substack.com/@veron1cabak3r" target="_blank" rel="noopener">Substack</a>.</p>
+  </div>
+</section>
+
+<!-- ==================== WHAT I TEACH ==================== -->
+<section class="section" id="learn">
+  <div class="section-header">
+    <h2>What I Teach</h2>
+    <p>How to use AI safely, creatively, and intelligently. I guide them as they build their own projects, and create a portfolio.</p>
+  </div>
+  <div class="learn-grid">
+    <div class="learn-card featured reveal">
+      <span class="core-badge">Core Philosophy</span>
+      <span class="card-icon">🌱</span>
+      <div class="card-body">
+        <h3>Learn to Learn</h3>
+        <p>Your child won't just use AI tools. They'll learn how to teach themselves and adapt as the technology changes. This is the real skill.</p>
+      </div>
+    </div>
+    <div class="learn-card reveal">
+      <span class="card-icon">🧩</span>
+      <div class="card-body">
+        <h3>AI Foundations</h3>
+        <p>What AI actually is, how it thinks, and what it can and can't do. We start with the basics and build real understanding.</p>
+      </div>
+    </div>
+    <div class="learn-card reveal">
+      <span class="card-icon">🛡️</span>
+      <div class="card-body">
+        <h3>Safety and Ethics</h3>
+        <p>Deepfakes, misinformation, privacy, and responsible use. Your child will learn to think critically about the AI they encounter every day.</p>
+      </div>
+    </div>
+    <div class="learn-card reveal">
+      <span class="card-icon">📜</span>
+      <div class="card-body">
+        <h3>The History</h3>
+        <p>From early computers to Software 1.0 (rules), 2.0 (machine learning), and 3.0 (LLMs and agents). The full arc of how we got here.</p>
+      </div>
+    </div>
+    <div class="learn-card reveal">
+      <span class="card-icon">🎨</span>
+      <div class="card-body">
+        <h3>Hands-On Projects</h3>
+        <p>AI art, chatbots, story generators, music, and more. Every session involves building something real and fun.</p>
+      </div>
+    </div>
+    <div class="learn-card reveal">
+      <span class="card-icon">💻</span>
+      <div class="card-body">
+        <h3>Real Tools</h3>
+        <p>Introduction to GitHub and building a portfolio of projects your child made. Real skills, real tools, real experience.</p>
+      </div>
+    </div>
+    <div class="learn-card reveal">
+      <span class="card-icon">🏗️</span>
+      <div class="card-body">
+        <h3>The Portfolio Payoff</h3>
+        <p>By the end, your child has a GitHub with real projects they built. Something tangible to show, share, and be proud of.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== CONTACT ==================== -->
+<section class="section contact-section" id="contact">
+  <div class="section-header">
+    <h2>Get in Touch</h2>
+    <p>Fill out the form and I'll be in touch to schedule a session.</p>
+  </div>
+
+  <div class="pricing-accordion">
+    <button class="pricing-toggle" type="button" aria-expanded="false" aria-controls="pricingContent" onclick="togglePricing(this)">
+      <span>Pricing</span>
+      <span class="chevron" aria-hidden="true">&#9656;</span>
+    </button>
+    <div class="pricing-content" id="pricingContent" role="region" aria-label="Pricing details">
+      <div class="pricing-inner">
+        <div class="price-row">
+          <span class="price-label-inline">Introductory session (30 minutes)</span>
+          <span class="price-amount-inline">$45</span>
+        </div>
+        <div class="price-row">
+          <span class="price-label-inline">Regular sessions</span>
+          <span class="price-amount-inline">$75 per hour</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="contact-card">
+    <form id="inquiryForm" action="https://script.google.com/macros/s/AKfycbwxnZaIU9sdQKMZvLbopDzgSw-WgGVz9RuDsPlsvL5dynnBmiLRelxfM_ztScHUtrsP4g/exec" method="POST" onsubmit="handleSubmit(event)">
+
+      <div class="form-divider">Parent 1</div>
+      <div class="form-group">
+        <label for="p1Name">Name</label>
+        <input type="text" id="p1Name" name="parent1_name" required placeholder="Full name">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="p1Email">Email</label>
+          <input type="email" id="p1Email" name="parent1_email" required placeholder="you@email.com">
+        </div>
+        <div class="form-group">
+          <label for="p1Phone">Phone</label>
+          <input type="tel" id="p1Phone" name="parent1_phone" required placeholder="(555) 123-4567">
+        </div>
+      </div>
+
+      <div class="form-divider">Parent 2 (optional)</div>
+      <div class="form-group">
+        <label for="p2Name">Name</label>
+        <input type="text" id="p2Name" name="parent2_name" placeholder="Full name">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="p2Email">Email</label>
+          <input type="email" id="p2Email" name="parent2_email" placeholder="you@email.com">
+        </div>
+        <div class="form-group">
+          <label for="p2Phone">Phone</label>
+          <input type="tel" id="p2Phone" name="parent2_phone" placeholder="(555) 123-4567">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Preferred contact method</label>
+        <div class="radio-group">
+          <label><input type="radio" name="contact_pref" value="Email" checked> Email</label>
+          <label><input type="radio" name="contact_pref" value="Phone"> Phone</label>
+        </div>
+      </div>
+
+      <div class="form-divider">Child</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="childName">Child's name</label>
+          <input type="text" id="childName" name="child_name" required placeholder="First name">
+        </div>
+        <div class="form-group">
+          <label for="childAge">Age</label>
+          <input type="number" id="childAge" name="child_age" required min="5" max="18" placeholder="Age">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="interests">What interests your child about technology?</label>
+        <textarea id="interests" name="interests" placeholder="Games, art, robots, coding, music..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="anythingElse">Anything else you'd like me to know?</label>
+        <textarea id="anythingElse" name="notes" placeholder="Any questions, concerns, or context you'd like to share."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="availability">Your availability (optional)</label>
+        <small class="form-help">Days and times that typically work for your family. Helps me suggest a time.</small>
+        <textarea id="availability" name="availability" placeholder="e.g., Tuesdays and Thursdays after 3pm"></textarea>
+      </div>
+
+      <button type="submit" class="submit-btn">Send</button>
+    </form>
+    <div class="thank-you" id="thankYou">
+      <h3>Thank you!</h3>
+      <p>I'll be in touch soon to schedule your first session.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== DEMOS ==================== -->
+<section class="section demo-section" id="demos">
+  <div class="section-header">
+    <h2>Try It: A Taste of a Session</h2>
+    <p>These mini activities are examples of what your child will explore. Go ahead, try them out!</p>
+  </div>
+  <div style="max-width:960px; margin:0 auto;">
+
+    <!-- BINARY -->
+    <div class="binary-card">
+      <h3>Binary Name Translator</h3>
+      <p class="binary-desc">Type your name and see how a computer sees it!</p>
+      <input type="text" class="binary-input" id="binaryInput" placeholder="Type your name..." maxlength="20" autocomplete="off">
+      <div class="binary-output" id="binaryOutput"></div>
+      <p class="binary-explainer">This is how computers see your name. Every letter becomes a group of 0s and 1s.</p>
+    </div>
+
+    <!-- SCRAMBLE -->
+    <div class="scramble-card" id="scrambleCard">
+      <span id="egg1" class="easter-egg" onclick="findEgg(1)">🤖</span>
+      <h3>Name Scramble Challenge</h3>
+      <p class="scramble-hint">Drag a letter into a slot to unscramble the name!</p>
+      <div class="target-area" id="targetArea">
+        <div class="target-row" id="targetRow"></div>
+      </div>
+      <div class="letter-grid" id="letterGrid"></div>
+      <div class="scramble-buttons">
+        <button class="scramble-btn btn-scramble" onclick="doScramble()">Scramble!</button>
+        <button class="scramble-btn btn-reset" onclick="doReset()">Reset</button>
+      </div>
+      <div class="scramble-status" id="scrambleStatus"></div>
+    </div>
+
+    <!-- FACTS -->
+    <h3 class="facts-heading">
+      <span id="egg2" class="easter-egg" onclick="findEgg(2)">⭐</span>
+      Fun AI Facts
+    </h3>
+    <div class="facts-grid">
+      <div class="fact-card"><span class="fact-emoji">🕰️</span><span>The first AI program was written in 1951. It played checkers, and it could actually learn from its mistakes.</span></div>
+      <div class="fact-card"><span class="fact-emoji">🍕</span><span>AI can compose music, paint pictures, and write stories, but it still cannot taste pizza.</span></div>
+      <div class="fact-card"><span class="fact-emoji">📱</span><span>Your phone uses AI over 100 times a day: autocorrect, face unlock, photo suggestions, voice assistants, and more.</span></div>
+      <div class="fact-card"><span class="fact-emoji">🤖</span><span>The word "robot" comes from a Czech word, "robota," meaning "forced labor." It was coined in a 1920 play.</span></div>
+      <div class="fact-card"><span class="fact-emoji">🏆</span><span>AI can beat humans at chess, Go, and Jeopardy. In 1997, IBM's Deep Blue defeated world chess champion Garry Kasparov.</span></div>
+      <div class="fact-card"><span class="fact-emoji">🚀</span><span>By 2026, AI can write code, make art, and have real conversations. The future is being built right now.</span></div>
+    </div>
+
+    <div class="easter-msg" id="easterMsg">You found them all! You'd be great at AI. It is all about finding patterns.</div>
+  </div>
+</section>
+
+<!-- ==================== FOOTER ==================== -->
+<footer class="footer" id="footer">
+  <span id="egg3" class="easter-egg" onclick="findEgg(3)">✨</span>
+  <p>Parents, curious about AI for yourself? <a href="https://veraicon.tech" target="_blank" rel="noopener">veraicon.tech</a></p>
+  <p style="margin-top:6px; font-size:0.78rem; color:#a8a0c0;">&copy; 2026 Veronica. All rights reserved.</p>
+</footer>
+
+<canvas class="confetti-canvas" id="confettiCanvas"></canvas>
+
+<script>
+/* ================================================
+   INTRO CHAT ANIMATION
+   Plays once per session via sessionStorage.
+   ================================================ */
+(function() {
+  var intro = document.getElementById('introChat');
+  var feed = document.getElementById('chatFeed');
+  var skipBtn = document.getElementById('chatSkip');
+  var colorSlider = document.getElementById('colorSlider');
+
+  function revealSlider() { colorSlider.classList.add('ready'); }
+
+  try {
+    if (sessionStorage.getItem('tutorIntroSeen') === '1') {
+      intro.style.display = 'none';
+      revealSlider();
+      return;
+    }
+  } catch (e) { /* continue */ }
+
+  document.body.classList.add('intro-active');
+
+  var timeouts = [];
+  function later(fn, ms) {
+    var t = setTimeout(fn, ms);
+    timeouts.push(t);
+    return t;
+  }
+
+  function showTyping(side) {
+    var bubble = document.createElement('div');
+    bubble.className = 'typing-bubble ' + side;
+    bubble.id = 'currentTyping';
+    bubble.innerHTML = '<span></span><span></span><span></span>';
+    feed.appendChild(bubble);
+  }
+
+  function removeTyping() {
+    var existing = document.getElementById('currentTyping');
+    if (existing) existing.remove();
+  }
+
+  function showMessage(side, text) {
+    removeTyping();
+    var bubble = document.createElement('div');
+    bubble.className = 'chat-bubble ' + side;
+    bubble.textContent = text;
+    feed.appendChild(bubble);
+  }
+
+  function finishIntro() {
+    intro.classList.add('hidden');
+    later(function() {
+      intro.style.display = 'none';
+      document.body.classList.remove('intro-active');
+      revealSlider();
+    }, 750);
+    try { sessionStorage.setItem('tutorIntroSeen', '1'); } catch (e) {}
+  }
+
+  function skipIntro() {
+    timeouts.forEach(function(t) { clearTimeout(t); });
+    timeouts = [];
+    finishIntro();
+  }
+
+  skipBtn.addEventListener('click', skipIntro);
+
+  /*
+    Typewriter bubble for parent messages.
+    Creates an empty bubble immediately with a blinking cursor,
+    then types out characters one at a time at charDelay ms apart.
+  */
+  function typewriterBubble(side, text, charDelay) {
+    removeTyping();
+    var bubble = document.createElement('div');
+    bubble.className = 'chat-bubble ' + side;
+
+    var textNode = document.createTextNode('');
+    bubble.appendChild(textNode);
+
+    var cursor = document.createElement('span');
+    cursor.className = 'type-cursor';
+    bubble.appendChild(cursor);
+
+    feed.appendChild(bubble);
+
+    var i = 0;
+    function typeNext() {
+      if (i < text.length) {
+        textNode.data += text.charAt(i);
+        i++;
+        later(typeNext, charDelay);
+      } else {
+        // Done typing: remove the cursor after a brief beat
+        later(function() {
+          if (cursor && cursor.parentNode) cursor.parentNode.removeChild(cursor);
+        }, 400);
+      }
+    }
+    later(typeNext, charDelay);
+  }
+
+  /*
+    Agent bubble with static text + inline clickable action link.
+    Clicking the link ends the intro.
+  */
+  function showActionMessage(staticText, actionText) {
+    removeTyping();
+    var bubble = document.createElement('div');
+    bubble.className = 'chat-bubble left';
+
+    bubble.appendChild(document.createTextNode(staticText + ' '));
+
+    var actionSpan = document.createElement('span');
+    actionSpan.className = 'action-link';
+    actionSpan.textContent = actionText;
+    actionSpan.setAttribute('role', 'button');
+    actionSpan.setAttribute('tabindex', '0');
+    actionSpan.addEventListener('click', skipIntro);
+    actionSpan.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        skipIntro();
+      }
+    });
+    bubble.appendChild(actionSpan);
+
+    feed.appendChild(bubble);
+  }
+
+  // Parent on the RIGHT (plum, typewriter).
+  // Agent on the LEFT (gray, full message at once).
+  // Timing:
+  //   1.0s  parent bubble appears empty, starts typing "find me an AI tutor for my child"
+  //         (~50ms per char, completes by ~2.6s)
+  //   3.5s  agent typing dots
+  //   5.5s  agent: "do you want someone who can..."
+  //   7.0s  parent bubble appears empty, types "yes" (60ms per char, ~180ms total)
+  //   8.5s  agent typing dots
+  //  10.0s  agent: "I found Veronica, she's awesome. Press here to learn more" (clickable)
+  later(function() { typewriterBubble('right', 'find me an AI tutor for my child', 50); }, 1000);
+  later(function() { showTyping('left'); }, 3500);
+  later(function() { showMessage('left', 'do you want someone who can prepare your kid for the future, teach them to be safe online, and have fun?'); }, 5500);
+  later(function() { typewriterBubble('right', 'yes', 60); }, 7000);
+  later(function() { showTyping('left'); }, 8500);
+  later(function() { showActionMessage("I found Veronica, she's awesome.", 'Press here to learn more \u2192'); }, 10000);
+  // NOTE: no auto-finish. User clicks the action link (or Skip) to dismiss.
+})();
+
+/* ================================================
+   COLOR SLIDER
+   Shifts the whole page palette by rotating --hue.
+   Value 0 = default plum (hue 260). Value 360 = full loop.
+   ================================================ */
+(function() {
+  var BASE_HUE = 25;
+  var slider = document.getElementById('hueSlider');
+  var root = document.documentElement;
+  slider.addEventListener('input', function() {
+    var newHue = (BASE_HUE + parseInt(slider.value, 10)) % 360;
+    root.style.setProperty('--hue', newHue);
+  });
+})();
+
+/* ================================================
+   SCRAMBLE GAME - DRAG AND DROP
+   Target word: "VERONICA" (8 letters, no space)
+   ================================================ */
+var ANSWER = 'VERONICA';
+var COLORS = [
+  '#7e5bef','#e8a0bf','#7db8e0','#6ec6a0','#f5c563','#e8926a',
+  '#9f7aea','#f687b3','#63b3ed','#68d391','#ecc94b','#fc8181'
+];
+
+var letterObjs = [];
+var slotObjs = [];
+var gameSolved = false;
+var gameScrambled = false;
+var dragId = null;
+var ghostEl = null;
+
+function buildGame() {
+  var targetRow = document.getElementById('targetRow');
+  var lg = document.getElementById('letterGrid');
+  targetRow.innerHTML = '';
+  lg.innerHTML = '';
+  letterObjs = [];
+  slotObjs = [];
+  gameSolved = false;
+  gameScrambled = false;
+  dragId = null;
+  removeGhost();
+  document.getElementById('scrambleStatus').textContent = 'Press Scramble to start!';
+
+  for (var i = 0; i < ANSWER.length; i++) {
+    var s = makeSlot(ANSWER[i], slotObjs.length);
+    targetRow.appendChild(s.el);
+    slotObjs.push(s);
+  }
+
+  for (var k = 0; k < ANSWER.length; k++) {
+    var ch = ANSWER[k];
+    var color = COLORS[k % COLORS.length];
+    var id = letterObjs.length;
+
+    var tile = document.createElement('div');
+    tile.className = 'letter-tile';
+    tile.textContent = ch;
+    tile.style.background = color;
+    tile.dataset.id = id;
+
+    tile.addEventListener('mousedown', tileMouseDown);
+    tile.addEventListener('touchstart', tileTouchStart, { passive: false });
+
+    lg.appendChild(tile);
+    letterObjs.push({ char: ch, color: color, id: id, placed: false, el: tile });
+  }
+}
+
+function makeSlot(targetChar, idx) {
+  var el = document.createElement('div');
+  el.className = 'target-slot';
+  el.dataset.idx = idx;
+
+  el.addEventListener('dragover', function(e) { e.preventDefault(); });
+  el.addEventListener('mouseenter', slotMouseEnter);
+  el.addEventListener('mouseleave', slotMouseLeave);
+
+  el.addEventListener('click', function() {
+    if (gameSolved || dragId !== null) return;
+    var slot = slotObjs[idx];
+    if (slot.letterObjId !== null) {
+      var obj = letterObjs[slot.letterObjId];
+      obj.placed = false;
+      obj.el.classList.remove('placed');
+      slot.letterObjId = null;
+      slot.el.textContent = '';
+      slot.el.classList.remove('filled', 'correct');
+    }
+  });
+
+  return { targetChar: targetChar, letterObjId: null, el: el };
+}
+
+/* ---- MOUSE ---- */
+function tileMouseDown(e) {
+  if (gameSolved || !gameScrambled) return;
+  var id = parseInt(e.currentTarget.dataset.id);
+  var obj = letterObjs[id];
+  if (obj.placed) return;
+  e.preventDefault();
+  dragId = id;
+  obj.el.classList.add('dragging');
+  createGhost(obj, e.clientX, e.clientY);
+  document.addEventListener('mousemove', onMouseMove);
+  document.addEventListener('mouseup', onMouseUp);
+}
+
+function onMouseMove(e) {
+  if (ghostEl) {
+    ghostEl.style.left = e.clientX + 'px';
+    ghostEl.style.top = e.clientY + 'px';
+  }
+  highlightSlotAt(e.clientX, e.clientY);
+}
+
+function onMouseUp(e) {
+  document.removeEventListener('mousemove', onMouseMove);
+  document.removeEventListener('mouseup', onMouseUp);
+  if (dragId === null) return;
+  var slotIdx = getSlotAt(e.clientX, e.clientY);
+  if (slotIdx !== null) placeLetter(dragId, slotIdx);
+  letterObjs[dragId].el.classList.remove('dragging');
+  clearAllHighlights();
+  removeGhost();
+  dragId = null;
+}
+
+function slotMouseEnter(e) { if (dragId !== null) e.currentTarget.classList.add('drag-over'); }
+function slotMouseLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+
+/* ---- TOUCH ---- */
+function tileTouchStart(e) {
+  if (gameSolved || !gameScrambled) return;
+  var id = parseInt(e.currentTarget.dataset.id);
+  var obj = letterObjs[id];
+  if (obj.placed) return;
+  e.preventDefault();
+  dragId = id;
+  obj.el.classList.add('dragging');
+  var touch = e.touches[0];
+  createGhost(obj, touch.clientX, touch.clientY);
+  e.currentTarget.addEventListener('touchmove', onTouchMove, { passive: false });
+  e.currentTarget.addEventListener('touchend', onTouchEnd);
+  e.currentTarget.addEventListener('touchcancel', onTouchEnd);
+}
+
+function onTouchMove(e) {
+  e.preventDefault();
+  var touch = e.touches[0];
+  if (ghostEl) {
+    ghostEl.style.left = touch.clientX + 'px';
+    ghostEl.style.top = touch.clientY + 'px';
+  }
+  highlightSlotAt(touch.clientX, touch.clientY);
+}
+
+function onTouchEnd(e) {
+  var tileEl = e.currentTarget;
+  tileEl.removeEventListener('touchmove', onTouchMove);
+  tileEl.removeEventListener('touchend', onTouchEnd);
+  tileEl.removeEventListener('touchcancel', onTouchEnd);
+  if (dragId === null) return;
+  var touch = e.changedTouches[0];
+  var slotIdx = getSlotAt(touch.clientX, touch.clientY);
+  if (slotIdx !== null) placeLetter(dragId, slotIdx);
+  letterObjs[dragId].el.classList.remove('dragging');
+  clearAllHighlights();
+  removeGhost();
+  dragId = null;
+}
+
+/* ---- GHOST + HIT TESTING ---- */
+function createGhost(obj, x, y) {
+  removeGhost();
+  ghostEl = document.createElement('div');
+  ghostEl.className = 'drag-ghost';
+  ghostEl.textContent = obj.char;
+  ghostEl.style.background = obj.color;
+  ghostEl.style.left = x + 'px';
+  ghostEl.style.top = y + 'px';
+  document.body.appendChild(ghostEl);
+}
+
+function removeGhost() {
+  if (ghostEl) { ghostEl.remove(); ghostEl = null; }
+}
+
+function getSlotAt(x, y) {
+  for (var i = 0; i < slotObjs.length; i++) {
+    var r = slotObjs[i].el.getBoundingClientRect();
+    if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return i;
+  }
+  return null;
+}
+
+function highlightSlotAt(x, y) {
+  for (var i = 0; i < slotObjs.length; i++) {
+    var r = slotObjs[i].el.getBoundingClientRect();
+    if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+      slotObjs[i].el.classList.add('drag-over');
+    } else {
+      slotObjs[i].el.classList.remove('drag-over');
+    }
+  }
+}
+
+function clearAllHighlights() {
+  slotObjs.forEach(function(s) { s.el.classList.remove('drag-over'); });
+}
+
+/* ---- PLACE + WIN ---- */
+function placeLetter(letterId, slotIdx) {
+  var slot = slotObjs[slotIdx];
+  var obj = letterObjs[letterId];
+  if (slot.letterObjId !== null) {
+    var oldObj = letterObjs[slot.letterObjId];
+    oldObj.placed = false;
+    oldObj.el.classList.remove('placed');
+  }
+  obj.placed = true;
+  obj.el.classList.remove('dragging');
+  obj.el.classList.add('placed');
+  slot.letterObjId = letterId;
+  slot.el.textContent = obj.char;
+  slot.el.classList.add('filled');
+  if (obj.char === slot.targetChar) slot.el.classList.add('correct');
+  else slot.el.classList.remove('correct');
+  checkWin();
+}
+
+function checkWin() {
+  for (var i = 0; i < slotObjs.length; i++) {
+    var s = slotObjs[i];
+    if (s.letterObjId === null) return;
+    if (letterObjs[s.letterObjId].char !== s.targetChar) return;
+  }
+  gameSolved = true;
+  document.getElementById('scrambleStatus').textContent = 'You did it! VERONICA!';
+  slotObjs.forEach(function(s) { s.el.classList.add('correct'); });
+  fireConfetti();
+}
+
+function doScramble() {
+  slotObjs.forEach(function(s) {
+    s.letterObjId = null;
+    s.el.textContent = '';
+    s.el.classList.remove('filled', 'correct', 'drag-over');
+  });
+  letterObjs.forEach(function(obj) {
+    obj.placed = false;
+    obj.el.classList.remove('placed', 'dragging');
+  });
+  dragId = null;
+  removeGhost();
+  gameSolved = false;
+  gameScrambled = true;
+  var lg = document.getElementById('letterGrid');
+  var arr = letterObjs.slice();
+  for (var i = arr.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+  }
+  arr.forEach(function(obj) { lg.appendChild(obj.el); });
+  document.getElementById('scrambleStatus').textContent = 'Drag letters into the slots!';
+}
+
+function doReset() { buildGame(); }
+
+/* ================================================
+   CONFETTI
+   ================================================ */
+function fireConfetti() {
+  var canvas = document.getElementById('confettiCanvas');
+  var ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  var particles = [];
+  var cols = ['#7e5bef','#e8a0bf','#7db8e0','#6ec6a0','#f5c563','#e8926a','#fc8181','#68d391','#ecc94b','#b794f4'];
+  for (var i = 0; i < 120; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      w: Math.random() * 10 + 4, h: Math.random() * 5 + 3,
+      color: cols[Math.floor(Math.random() * cols.length)],
+      vx: (Math.random() - 0.5) * 3.5, vy: Math.random() * 2.5 + 1.5,
+      rot: Math.random() * 360, rs: (Math.random() - 0.5) * 8, op: 1
+    });
+  }
+  var frame = 0;
+  (function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    var alive = false;
+    for (var i = 0; i < particles.length; i++) {
+      var p = particles[i];
+      if (p.op <= 0) continue;
+      alive = true;
+      p.x += p.vx; p.y += p.vy; p.vy += 0.04; p.rot += p.rs;
+      if (frame > 70) p.op -= 0.012;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot * Math.PI / 180);
+      ctx.globalAlpha = Math.max(0, p.op);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    }
+    frame++;
+    if (alive) requestAnimationFrame(animate);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  })();
+}
+
+/* ================================================
+   BINARY TRANSLATOR
+   ================================================ */
+document.getElementById('binaryInput').addEventListener('input', function() {
+  var text = this.value;
+  var out = document.getElementById('binaryOutput');
+  if (!text) { out.textContent = ''; return; }
+  out.textContent = text.split('').map(function(ch) {
+    return ch.charCodeAt(0).toString(2).padStart(8, '0');
+  }).join(' ');
+});
+
+/* ================================================
+   SCROLL REVEAL
+   ================================================ */
+(function() {
+  var obs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        obs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.fact-card, .reveal').forEach(function(el) { obs.observe(el); });
+})();
+
+/* ================================================
+   EASTER EGGS
+   ================================================ */
+var eggsFound = { 1: false, 2: false, 3: false };
+function findEgg(n) {
+  if (eggsFound[n]) return;
+  eggsFound[n] = true;
+  document.getElementById('egg' + n).classList.add('found');
+  if (eggsFound[1] && eggsFound[2] && eggsFound[3]) {
+    var msg = document.getElementById('easterMsg');
+    msg.style.display = 'block';
+    msg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+/* ================================================
+   PRICING ACCORDION
+   ================================================ */
+function togglePricing(btn) {
+  var content = document.getElementById('pricingContent');
+  var isOpen = btn.classList.toggle('open');
+  content.classList.toggle('open', isOpen);
+  btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+}
+
+/* ================================================
+   CONTACT FORM
+   Posts to the Google Apps Script endpoint via fetch
+   with mode: 'no-cors' (Apps Script can't return CORS
+   headers, so the response is opaque but the POST
+   still lands). Shows the thank-you message on
+   success or failure so the user always gets feedback.
+   ================================================ */
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwxnZaIU9sdQKMZvLbopDzgSw-WgGVz9RuDsPlsvL5dynnBmiLRelxfM_ztScHUtrsP4g/exec';
+
+function handleSubmit(e) {
+  e.preventDefault();
+  var form = document.getElementById('inquiryForm');
+  var submitBtn = form.querySelector('.submit-btn');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+  }
+
+  var data = new FormData(form);
+
+  fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    body: data
+  }).finally(function() {
+    form.style.display = 'none';
+    document.getElementById('thankYou').style.display = 'block';
+  });
+}
+
+/* ================================================
+   INIT
+   ================================================ */
+buildGame();
+</script>
+</body>
+</html>
